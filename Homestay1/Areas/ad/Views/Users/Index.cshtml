@@ -1,0 +1,88 @@
+﻿@model IEnumerable<Homestay1.Models.Entities.User>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý Users";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h2>Danh sách Users</h2>
+    <a class="btn btn-primary" href="@Url.Action("Create", "Users", new { area = "ad" })">Thêm mới</a>
+</div>
+
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input class="form-control" name="search" placeholder="Tìm kiếm..." value="@ViewBag.Search" />
+        <button class="btn btn-outline-secondary" type="submit">Tìm</button>
+    </div>
+</form>
+
+<table class="table table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Họ tên</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Ngày tạo</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td>@u.UserID</td>
+                    <td>@u.FullName</td>
+                    <td>@u.Email</td>
+                    <td>@u.Phone</td>
+                    <td>@(u.Role?.RoleName ?? "N/A")</td>
+                    <td>@u.CreatedAt.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <!-- Nút Sửa -->
+                        <a href="@Url.Action("Edit", "Users", new { area = "ad", id = u.UserID })"
+                           class="btn btn-sm btn-warning me-1">
+                            Sửa
+                        </a>
+
+                        <!-- Form Xóa -->
+                        <form method="post"
+                              action="@Url.Action("Delete", "Users", new { area = "ad" })"
+                              class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa user này?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@u.UserID" />
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                Xóa
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="7" class="text-center">Không có dữ liệu</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}

@@ -1,0 +1,96 @@
+﻿@model IEnumerable<Homestay1.Models.Homestay>
+@{
+    ViewData["Title"] = "Khám phá Homestays";
+    Layout = "_UserLayout";
+}
+
+<style>
+    .homestay-card {
+        background: #fff;
+        border-radius: .5rem;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: transform .2s, box-shadow .2s;
+    }
+
+        .homestay-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+    .image-wrap img {
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .address-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        font-size: .85rem;
+        border-top-right-radius: .5rem;
+        border-bottom-left-radius: .5rem;
+    }
+
+    .title {
+        color: #c8181e;
+        font-weight: 600;
+    }
+
+    .desc {
+        font-size: .9rem;
+        color: #555;
+        max-height: 4.5rem;
+        overflow: hidden;
+    }
+
+    .explore-link {
+        font-weight: 600;
+        color: #c8181e;
+        text-decoration: none;
+    }
+
+        .explore-link:hover {
+            text-decoration: underline;
+        }
+</style>
+<section class="py-5">
+    <div class="container">
+        <div class="row gx-4 gy-5">
+            @foreach (var hs in Model)
+            {
+                <div class="col-sm-6 col-lg-4">
+                    <div class="homestay-card">
+                        <div class="image-wrap position-relative">
+                            @{
+                                // Logic hiển thị ảnh homestay
+                                var homestayImage = !string.IsNullOrEmpty(hs.ImageUrl)
+                                ? $"~/Img/{hs.ImageUrl}"
+                                : "~/Img/default-homestay.jpg";
+                            }
+                            <img src="@Url.Content(homestayImage)"
+                                 alt="@hs.Name"
+                                 class="img-fluid w-100"
+                                 onerror="this.src='@Url.Content("~/Img/default-homestay.jpg")'" />
+                            <div class="address-overlay px-2 py-1">
+                                <i class="bi bi-geo-alt-fill me-1"></i>@hs.Address
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <h5 class="title mb-2">@hs.Name</h5>
+                            <p class="desc mb-3">@hs.Description</p>
+                            <a asp-controller="Home"
+                               asp-action="Details"
+                               asp-route-id="@hs.HomestayID"
+                               class="explore-link d-inline-flex align-items-center">
+                                Khám phá <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

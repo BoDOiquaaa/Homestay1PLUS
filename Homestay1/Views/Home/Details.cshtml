@@ -1,0 +1,394 @@
+﻿@model Homestay1.Models.Homestay
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "_UserLayout";
+}
+
+<style>
+    .homestay-hero {
+        height: 400px;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        color: white;
+        padding: 2rem;
+    }
+
+    .homestay-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .homestay-address {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .info-card {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        color: #c8181e;
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: #c8181e;
+            border-radius: 2px;
+        }
+
+    .room-card {
+        background: #fff;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+
+        .room-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+    .room-image {
+        height: 250px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .room-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-available {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-booked {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f1b0b7;
+    }
+
+    .status-maintenance {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .room-info {
+        padding: 1.5rem;
+    }
+
+    .room-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .room-price {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #c8181e;
+        margin-bottom: 0.5rem;
+    }
+
+    .price-unit {
+        font-size: 1rem;
+        color: #666;
+        font-weight: 400;
+    }
+
+    .back-btn {
+        background: #c8181e;
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.3s ease;
+    }
+
+        .back-btn:hover {
+            background: #a01419;
+            color: white;
+            text-decoration: none;
+        }
+
+    .description-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #555;
+    }
+
+    .no-rooms {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 3rem;
+    }
+
+    .quick-info .info-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+        .quick-info .info-item:last-child {
+            border-bottom: none;
+        }
+
+    /* Map Styles */
+    .map-container {
+        height: 300px;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+    }
+
+    .map-placeholder {
+        height: 300px;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #dee2e6;
+    }
+
+    .map-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 0.5rem;
+    }
+
+    .open-maps-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: background 0.3s ease;
+        margin-top: 1rem;
+    }
+
+        .open-maps-btn:hover {
+            background: #218838;
+            color: white;
+            text-decoration: none;
+        }
+</style>
+
+<div class="container my-4">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a asp-controller="Home" asp-action="Index" class="back-btn">
+            <i class="bi bi-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Homestay Hero Section -->
+    @{
+        var homestayHeroImage = !string.IsNullOrEmpty(Model.ImageUrl)
+        ? $"~/Img/{Model.ImageUrl}"
+        : "~/Img/default-homestay.jpg";
+    }
+    <div class="homestay-hero"
+         style="background-image: url('@Url.Content(homestayHeroImage)')">
+        <div class="hero-overlay">
+            <h1 class="homestay-title">@Model.Name</h1>
+            <p class="homestay-address">
+                <i class="bi bi-geo-alt-fill me-2"></i>@Model.Address
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Description Section -->
+            <div class="info-card">
+                <h2 class="section-title">Giới thiệu</h2>
+                <div class="description-text">
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        @Html.Raw(Model.Description.Replace("\n", "<br>"))
+                    }
+                    else
+                    {
+                        <p class="text-muted">Chưa có mô tả chi tiết cho homestay này.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Rooms Section -->
+            <div class="info-card">
+                <h2 class="section-title">Danh sách phòng</h2>
+                @if (Model.Rooms != null && Model.Rooms.Any())
+                {
+                    <div class="row">
+                        @foreach (var room in Model.Rooms)
+                        {
+                            <div class="col-md-6">
+                                <div class="room-card">
+                                    @{
+                                        var roomImage = !string.IsNullOrEmpty(room.ImageUrl)
+                                        ? $"~/Img/{room.ImageUrl}"
+                                        : "~/Img/default-room.jpg";
+                                    }
+                                    <div class="room-image"
+                                         style="background-image: url('@Url.Content(roomImage)')">
+                                        <div class="room-status @(room.Status.ToLower() == "available" ? "status-available" :
+                                                                  room.Status.ToLower() == "booked" ? "status-booked" : "status-maintenance")">
+                                            @switch (room.Status.ToLower())
+                                            {
+                                                case "available":
+                                                    <text>Còn trống</text>
+                                                    break;
+                                                case "booked":
+                                                    <text>Đã đặt</text>
+                                                    break;
+                                                case "maintenance":
+                                                    <text>Bảo trì</text>
+                                                    break;
+                                                default:
+                                                    @room.Status
+                                                    break;
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="room-info">
+                                        <h3 class="room-name">@room.RoomName</h3>
+                                        <div class="room-price">
+                                            @room.PricePerNight.ToString("N0") VNĐ
+                                            <span class="price-unit">/ đêm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="no-rooms">
+                        <i class="bi bi-house-slash" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                        <p>Hiện tại homestay này chưa có phòng nào.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Quick Info Sidebar -->
+            <div class="info-card">
+                <h3 class="section-title" style="font-size: 1.5rem;">Thông tin nhanh</h3>
+                <div class="quick-info">
+                    <div class="info-item">
+                        <strong><i class="bi bi-calendar-check me-2 text-primary"></i>Ngày tạo:</strong>
+                        <span class="ms-2">@Model.CreatedAt.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="info-item">
+                        <strong><i class="bi bi-door-open me-2 text-success"></i>Số phòng:</strong>
+                        <span class="ms-2">@(Model.Rooms?.Count ?? 0) phòng</span>
+                    </div>
+                    @if (Model.Rooms != null && Model.Rooms.Any())
+                    {
+                        <div class="info-item">
+                            <strong><i class="bi bi-currency-dollar me-2 text-warning"></i>Giá từ:</strong>
+                            <span class="ms-2 text-danger fw-bold">
+                                @Model.Rooms.Min(r => r.PricePerNight).ToString("N0") VNĐ/đêm
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Contact or Booking Button -->
+                <div class="mt-4">
+                    <button class="btn btn-danger w-100 py-3 fw-bold" style="font-size: 1.1rem;">
+                        <i class="bi bi-telephone-fill me-2"></i>Liên hệ đặt phòng
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Section - CẬP NHẬT -->
+            <div class="info-card">
+                <h3 class="section-title" style="font-size: 1.5rem;">Vị trí</h3>
+                @if (!string.IsNullOrEmpty(Model.MapUrl))
+                {
+                    <div class="map-container">
+                        <iframe src="@Model.MapUrl"
+                                class="map-iframe"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                    <a href="@Model.MapUrl.Replace("/embed", "")"
+                       target="_blank"
+                       class="open-maps-btn">
+                        <i class="bi bi-geo-alt-fill me-2"></i>Mở trong Google Maps
+                    </a>
+                }
+                else
+                {
+                    <div class="map-placeholder">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-map" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                            <p class="mb-0">Chưa cập nhật vị trí</p>
+                            <small>Vui lòng liên hệ để biết thêm thông tin</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

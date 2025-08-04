@@ -1,0 +1,95 @@
+﻿@model Homestay1.ViewModels.LoginViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form id="loginForm">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" id="Email" name="Email" class="form-control" placeholder="Nhập email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Mật khẩu</label>
+        <input asp-for="Password" id="Password" name="Password" type="password" class="form-control" placeholder="Nhập mật khẩu" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Đăng nhập</button>
+</form>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $("#loginForm").submit(function (e) {
+            e.preventDefault();
+
+            // Lấy giá trị và debug
+            var email = $("#Email").val();
+            var password = $("#Password").val();
+
+            console.log("=== FORM SUBMIT DEBUG ===");
+            console.log("Email:", email);
+            console.log("Password length:", password ? password.length : 0);
+
+            // Kiểm tra client-side trước
+            if (!email || email.trim() === '') {
+                alert('Vui lòng nhập email');
+                return;
+            }
+
+            if (!password || password.trim() === '') {
+                alert('Vui lòng nhập mật khẩu');
+                return;
+            }
+
+            // Lấy anti-forgery token
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            console.log("Token:", token ? "Present" : "Missing");
+
+            var data = {
+                Email: email.trim(),
+                Password: password
+            };
+
+            console.log("Sending data:", data);
+
+            $.ajax({
+                url: '@Url.Action("LoginAjax", "Account", new { area = "ad" })',
+                type: 'POST',
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    console.log("Success response:", res);
+                    if (res.success) {
+                        window.location = res.redirectUrl;
+                    } else {
+                        alert(res.errors.join("\n"));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error Status:', xhr.status);
+                    console.log('Error Response:', xhr.responseText);
+                    console.log('Error:', error);
+
+                    try {
+                        var errorResponse = JSON.parse(xhr.responseText);
+                        if (errorResponse.errors) {
+                            alert('Lỗi: ' + errorResponse.errors.join('\n'));
+                        } else {
+                            alert('Lỗi đăng nhập: ' + xhr.status);
+                        }
+                    } catch (e) {
+                        alert('Lỗi đăng nhập: ' + xhr.status + ' - ' + error);
+                    }
+                }
+            });
+        });
+    </script>
+}

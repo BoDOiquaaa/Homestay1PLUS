@@ -1,0 +1,44 @@
+﻿@model IEnumerable<Homestay1.Models.Homestay>
+
+@{
+    ViewData["Title"] = "Quản lý Homestays";
+    Layout = "_AdminLayout";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form action="@Url.Action("Index", "Homestays")" method="get" class="form-inline mb-2">
+    <input type="text" name="search" value="@ViewData["CurrentFilter"]" placeholder="Tìm kiếm..." class="form-control mr-2" />
+    <button type="submit" class="btn btn-primary">Tìm</button>
+    <a href="@Url.Action("Create", "Homestays")" class="btn btn-success ml-auto">Thêm mới</a>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tên</th>
+            <th>Địa chỉ</th>
+            <th>Ngày tạo</th>
+            <th>Hành động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Address</td>
+                <td>@item.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td>
+                    <a href="@Url.Action("Details", "Homestays", new { id = item.HomestayID })" class="btn btn-sm btn-info">Chi tiết</a>
+                    <a href="@Url.Action("Edit", "Homestays", new { id = item.HomestayID })" class="btn btn-sm btn-warning">Sửa</a>
+                    <form action="@Url.Action("DeleteConfirmed", "Homestays")" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@item.HomestayID" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa homestay này?');">Xóa</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

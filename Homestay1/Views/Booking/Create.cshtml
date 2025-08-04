@@ -1,0 +1,53 @@
+﻿@model Homestay1.Models.Booking
+@{
+    ViewBag.Title = "Đặt phòng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container my-5">
+  <div class="card mx-auto" style="max-width: 500px;">
+    <div class="card-body p-4">
+      <h3 class="text-center mb-4">Thông tin đặt phòng</h3>
+            @using (Html.BeginForm("Create", "Booking", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+            <div class="mb-3">
+                    @Html.LabelFor(m => m.Name, null, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Nhập họ tên", required = "required" })
+                    @Html.ValidationMessageFor(m => m.Name, "", new { @class = "invalid-feedback d-block" })
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                        @Html.LabelFor(m => m.CheckIn, null, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.CheckIn, "{0:yyyy-MM-dd}", new { @type = "date", @class = "form-control", required = "required" })
+                        @Html.ValidationMessageFor(m => m.CheckIn, "", new { @class = "invalid-feedback d-block" })
+              </div>
+              <div class="col-md-6 mb-3">
+                        @Html.LabelFor(m => m.CheckOut, null, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.CheckOut, "{0:yyyy-MM-dd}", new { @type = "date", @class = "form-control", required = "required" })
+                        @Html.ValidationMessageFor(m => m.CheckOut, "", new { @class = "invalid-feedback d-block" })
+              </div>
+            </div>
+
+            <div class="mb-3">
+                    @Html.Label("Chọn phòng", null, new { @class = "form-label" })
+                    @Html.DropDownListFor(m => m.RoomID, (SelectList)ViewBag.Rooms, "-- Chọn phòng --", new { @class = "form-select", required = "required" })
+                    @Html.ValidationMessageFor(m => m.RoomID, "", new { @class = "invalid-feedback d-block" })
+            </div>
+
+            <div class="mb-3">
+                    @Html.LabelFor(m => m.Guests, null, new { @class = "form-label" })
+                    @Html.TextBoxFor(m => m.Guests, new { @class = "form-control", type = "number", min = "1", required = "required" })
+                    @Html.ValidationMessageFor(m => m.Guests, "", new { @class = "invalid-feedback d-block" })
+            </div>
+
+            <div class="text-center mt-4">
+              <button type="submit" class="btn btn-primary px-5">Xác nhận</button>
+            </div>
+            }
+    </div>
+  </div>
+</div>

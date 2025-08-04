@@ -1,0 +1,100 @@
+﻿@model Homestay1.Models.Homestay
+@{
+    ViewData["Title"] = "Xóa Homestay";
+    Layout = "_AdminLayout";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="alert alert-warning">
+    <h4>⚠️ Xác nhận xóa</h4>
+    <p>Bạn có chắc chắn muốn xóa homestay này không?</p>
+    <p><strong>Lưu ý:</strong> Việc xóa homestay sẽ xóa luôn tất cả các phòng liên quan!</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Thông tin Homestay</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Url.Content(Model.ImageUrl)" class="img-fluid rounded" alt="@Model.Name" />
+                }
+                else
+                {
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 200px;">
+                        <span class="text-muted">Không có ảnh</span>
+                    </div>
+                }
+            </div>
+            <div class="col-md-8">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>Tên:</strong></td>
+                        <td>@Model.Name</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Địa chỉ:</strong></td>
+                        <td>@Model.Address</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mô tả:</strong></td>
+                        <td>@(string.IsNullOrEmpty(Model.Description) ? "Không có" : Model.Description)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ngày tạo:</strong></td>
+                        <td>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Số phòng:</strong></td>
+                        <td>@(Model.Rooms?.Count ?? 0) phòng</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        @if (Model.Rooms != null && Model.Rooms.Any())
+        {
+            <div class="mt-4">
+                <h6>Danh sách phòng sẽ bị xóa:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Tên phòng</th>
+                                <th>Giá/đêm</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var room in Model.Rooms)
+                            {
+                                <tr>
+                                    <td>@room.RoomName</td>
+                                    <td>@room.PricePerNight.ToString("C")</td>
+                                    <td>@room.Status</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="mt-4">
+    <form asp-area="ad" asp-controller="Homestays" asp-action="Delete" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="HomestayID" />
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa homestay này và tất cả phòng liên quan không?')">
+            <i class="fas fa-trash"></i> Xác nhận xóa
+        </button>
+    </form>
+    <a asp-area="ad" asp-controller="Homestays" asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Hủy
+    </a>
+</div>

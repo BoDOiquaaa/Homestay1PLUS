@@ -1,0 +1,258 @@
+﻿@model Homestay1.ViewModels.UserViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Thêm User";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<!-- Alert placeholder for showing errors/success messages -->
+<div id="alert-placeholder"></div>
+
+<form id="createUserForm">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label asp-for="RoleID" class="form-label">Vai trò <span class="text-danger">*</span></label>
+        <select asp-for="RoleID" class="form-select" id="roleId" required>
+            <option value="">-- Chọn vai trò --</option>
+            @if (ViewBag.Roles != null)
+            {
+                @foreach (var role in (List<Homestay1.Models.Entities.Role>)ViewBag.Roles)
+                {
+                    <option value="@role.RoleID">@role.RoleName</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="RoleID" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label">Họ và tên <span class="text-danger">*</span></label>
+        <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên" id="fullName" required />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email <span class="text-danger">*</span></label>
+        <input asp-for="Email" type="email" class="form-control" placeholder="Nhập địa chỉ email" id="email" required />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+        <input asp-for="Password" type="password" class="form-control" placeholder="Nhập mật khẩu" id="password" required />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Phone" class="form-label">Số điện thoại</label>
+        <input asp-for="Phone" class="form-control" placeholder="Nhập số điện thoại" id="phone" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <button type="button" id="saveBtn" class="btn btn-success">
+        <span id="saveSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        Lưu
+    </button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Debug: Check if dropdown has values
+            console.log('Dropdown options:', $('#roleId option').length);
+            $('#roleId option').each(function() {
+                console.log('Option:', $(this).val(), $(this).text());
+            });
+
+            $('#saveBtn').click(function(e) {
+                e.preventDefault();
+
+                // Clear previous alerts
+                $('#alert-placeholder').empty();
+
+                // Get form values with debugging
+                var roleId = parseInt($('#roleId').val()) || 0;
+                var fullName = $('#fullName').val().trim();
+                var email = $('#email').val().trim();
+                var password = $('#password').val();
+                var phone = $('#phone').val().trim();
+
+                console.log('=== FORM DEBUG ===');
+                console.log('Selected roleId:', roleId, typeof roleId);
+                console.log('Selected option text:', $('#roleId option:selected').text());
+                console.log('FullName:', fullName);
+                console.log('Email:', email);
+                console.log('Password length:', password ? password.length : 0);
+                console.log('Phone:', phone);
+
+                // Client-side validation
+                var errors = [];
+                if (!roleId || roleId === 0) {
+                    errors.push('Vui lòng chọn vai trò');
+                    console.log('RoleID validation failed:', roleId);
+                }
+                if (!fullName || fullName === '') {
+                    errors.push('Vui lòng nhập họ và tên');
+                }
+                if (!email || email === '') {
+                    errors.push('Vui lòng nhập email');
+                }
+                if (!password || password === '') {
+                    errors.push('Vui lòng nhập mật khẩu');
+                }
+
+                if (errors.length > 0) {
+                    console.log('Validation errors:', errors);
+                    var errorHtml = '<div class="alert alert-danger"><ul class="mb-0">';
+                    errors.forEach(function(error) {
+                        errorHtml += '<li>' + error + '</li>';
+                    });
+                    errorHtml += '</ul></div>';
+                    $('#alert-placeholder').html(errorHtml);
+                    return;
+                }
+
+                // Show loading spinner
+                $('#saveSpinner').removeClass('d-none');
+                $('#saveBtn').prop('disabled', true);
+
+                // Prepare form data
+                var formData = new FormData();
+                formData.append('RoleID', roleId);
+                formData.append('FullName', fullName);
+                formData.append('Email', email);
+                formData.append('Password', password);
+                formData.append('Phone', phone || '');
+
+                // Get anti-forgery token
+                var token = $('input[name="__RequestVerificationToken"]').val();
+                formData.append('__RequestVerificationToken', token);
+
+                console.log('=== SENDING DATA ===');
+                console.log('URL:', '@Url.Action("Create", "Users", new { area = "ad" })');
+
+                // Send AJAX request
+                $.ajax({
+                    url: '@Url.Action("Create", "Users", new { area = "ad" })',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log('=== SUCCESS RESPONSE ===');
+                        console.log('Response:', response);
+
+                        $('#saveSpinner').addClass('d-none');
+                        $('#saveBtn').prop('disabled', false);
+
+                        if (response.success && response.redirectUrl) {
+                            $('#alert-placeholder').html(
+                                '<div class="alert alert-success">✅ Thêm user thành công! Đang chuyển hướng...</div>'
+                            );
+                            setTimeout(function() {
+                                window.location.href = response.redirectUrl;
+                            }, 1000);
+                        } else {
+                            $('#alert-placeholder').html(
+                                '<div class="alert alert-warning">⚠️ Phản hồi không hợp lệ từ server</div>'
+                            );
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('=== ERROR ===');
+                        console.log('Status:', xhr.status);
+                        console.log('Status Text:', xhr.statusText);
+                        console.log('Error:', error);
+                        console.log('Response Text:', xhr.responseText);
+
+                        // Hide loading spinner
+                        $('#saveSpinner').addClass('d-none');
+                        $('#saveBtn').prop('disabled', false);
+
+                        var errorMessages = [];
+
+                        try {
+                            // Try to parse JSON response
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.errors && Array.isArray(response.errors)) {
+                                errorMessages = response.errors;
+                            } else if (response.message) {
+                                errorMessages.push(response.message);
+                            }
+                        } catch (e) {
+                            // If not JSON, parse HTML for specific errors
+                            var responseText = xhr.responseText;
+
+                            if (xhr.status === 400) {
+                                if (responseText.includes('Email này đã tồn tại')) {
+                                    errorMessages.push('❌ Email này đã tồn tại');
+                                }
+                                if (responseText.includes('không có quyền')) {
+                                    errorMessages.push('❌ Bạn không có quyền thêm user với vai trò này');
+                                }
+                                if (responseText.includes('validation') || responseText.includes('required')) {
+                                    errorMessages.push('❌ Thông tin không hợp lệ, vui lòng kiểm tra lại');
+                                }
+                                if (responseText.includes('Vai trò')) {
+                                    errorMessages.push('❌ Vai trò không hợp lệ');
+                                }
+                            }
+
+                            if (errorMessages.length === 0) {
+                                if (xhr.status === 400) {
+                                    errorMessages.push('❌ Dữ liệu không hợp lệ (Status: 400)');
+                                } else if (xhr.status === 500) {
+                                    errorMessages.push('❌ Lỗi server nội bộ (Status: 500)');
+                                } else if (xhr.status === 0) {
+                                    errorMessages.push('❌ Không thể kết nối đến server');
+                                } else {
+                                    errorMessages.push('❌ Lỗi không xác định (Status: ' + xhr.status + ')');
+                                }
+                            }
+                        }
+
+                        // Display errors
+                        if (errorMessages.length > 0) {
+                            var errorHtml = '<div class="alert alert-danger"><ul class="mb-0">';
+                            errorMessages.forEach(function(error) {
+                                errorHtml += '<li>' + error + '</li>';
+                            });
+                            errorHtml += '</ul></div>';
+                            $('#alert-placeholder').html(errorHtml);
+                        } else {
+                            $('#alert-placeholder').html(
+                                '<div class="alert alert-danger">❌ Có lỗi xảy ra, vui lòng thử lại</div>'
+                            );
+                        }
+                    }
+                });
+            });
+
+            // Clear alerts when user interacts with form
+            $('input, select').on('input change', function() {
+                $('#alert-placeholder').empty();
+            });
+
+            // Visual feedback for validation
+            $('#roleId, #fullName, #email, #password').on('change input blur', function() {
+                var $this = $(this);
+                var value = $this.val();
+
+                // Remove previous validation classes
+                $this.removeClass('is-invalid is-valid');
+
+                if (!value || value === '' || (this.id === 'roleId' && value === '0')) {
+                    $this.addClass('is-invalid');
+                } else {
+                    $this.addClass('is-valid');
+                }
+            });
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

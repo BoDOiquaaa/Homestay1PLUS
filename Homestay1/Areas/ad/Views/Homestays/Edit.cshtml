@@ -1,0 +1,84 @@
+﻿@model Homestay1.Models.Homestay
+
+@{
+    ViewData["Title"] = "Sửa Homestay";
+    Layout = "_AdminLayout";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@Html.AntiForgeryToken()
+
+<div id="edit-container">
+    <input type="hidden" id="homestayId" value="@Model.HomestayID" />
+    <div class="mb-3">
+        <label class="form-label">Owner ID</label>
+        <input id="ownerId" value="@Model.OwnerID" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input id="name" value="@Model.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <input id="address" value="@Model.Address" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea id="description" class="form-control" rows="4">@Model.Description</textarea>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Ảnh hiện tại</label><br />
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" style="max-width: 200px;" />
+        }
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Chọn ảnh mới (nếu muốn)</label>
+        <input type="file" id="imageFile" class="form-control" accept="image/*" />
+    </div>
+    <button id="updateBtn" class="btn btn-primary">Lưu</button>
+    <a href="@Url.Action("Index", "Homestays")" class="btn btn-secondary">Hủy</a>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('updateBtn').addEventListener('click', async function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const data = new FormData();
+
+            data.append('HomestayID', document.getElementById('homestayId').value);
+            data.append('OwnerID', document.getElementById('ownerId').value);
+            data.append('Name', document.getElementById('name').value);
+            data.append('Address', document.getElementById('address').value);
+            data.append('Description', document.getElementById('description').value);
+
+            const imageFile = document.getElementById('imageFile').files[0];
+            if (imageFile) {
+                data.append('ImageFile', imageFile);
+            }
+
+            try {
+                const response = await fetch('@Url.Action("Edit", "Homestays")', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    body: data
+                });
+
+                if (!response.ok) throw new Error('Lỗi máy chủ');
+
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    alert('Cập nhật thất bại');
+                }
+            } catch (error) {
+                alert("Có lỗi xảy ra: " + error.message);
+            }
+        });
+    </script>
+}

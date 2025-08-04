@@ -1,0 +1,70 @@
+﻿@model Homestay1.Models.Room
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = "Thêm phòng";
+    Layout = "_AdminLayout";
+    var token = ViewBag.RequestVerificationToken;
+}
+<h2>@ViewData["Title"]</h2>
+
+<div class="form-group mb-3">
+    <label>Homestay</label>
+    <select id="HomestayID" class="form-control">
+        @foreach (var item in (SelectList)ViewData["HomestayID"])
+        {
+            <option value="@item.Value">@item.Text</option>
+        }
+    </select>
+</div>
+<div class="form-group mb-3">
+    <label>Tên phòng</label>
+    <input id="RoomName" class="form-control" />
+</div>
+<div class="form-group mb-3">
+    <label>Giá mỗi đêm</label>
+    <input id="PricePerNight" class="form-control" />
+</div>
+<div class="form-group mb-3">
+    <label>Trạng thái</label>
+    <input id="Status" class="form-control" />
+</div>
+<div class="form-group mb-3">
+    <label>Chọn ảnh</label>
+    <input id="ImageFile" type="file" class="form-control" accept="image/*" />
+</div>
+
+<button onclick="createRoom()" class="btn btn-success">Lưu</button>
+<a asp-area="Ad" asp-action="Index" class="btn btn-secondary">Hủy</a>
+
+@section Scripts {
+    <script>
+        function createRoom() {
+            var formData = new FormData();
+            formData.append("HomestayID", document.getElementById("HomestayID").value);
+            formData.append("RoomName", document.getElementById("RoomName").value);
+            formData.append("PricePerNight", document.getElementById("PricePerNight").value);
+            formData.append("Status", document.getElementById("Status").value);
+
+            var imageFile = document.getElementById("ImageFile").files[0];
+            if (imageFile) {
+                formData.append("ImageFile", imageFile);
+            }
+
+            fetch('/Ad/Rooms/CreateAjaxWithImage', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': '@token'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Thêm thành công!");
+                    window.location.href = "/Ad/Rooms/Index?message=success";
+                } else {
+                    return response.text().then(txt => alert("Lỗi: " + txt));
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,143 @@
+﻿@model Homestay1.ViewModels.UserViewModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Sửa User";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<!-- Debug info - có thể xóa sau khi test -->
+<div class="alert alert-info" style="margin-bottom: 20px;">
+    <strong>Debug Info:</strong><br />
+    UserID: @Model?.UserID<br />
+    RoleID: @Model?.RoleID<br />
+    FullName: @Model?.FullName<br />
+    Email: @Model?.Email<br />
+    Phone: @Model?.Phone
+</div>
+
+<form asp-area="ad"
+      asp-controller="Users"
+      asp-action="Edit"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <!-- Hidden field cho UserID -->
+    <input type="hidden" asp-for="UserID" />
+
+    <div class="mb-3">
+        <label asp-for="RoleID" class="form-label">Vai trò <span class="text-danger">*</span></label>
+        <select asp-for="RoleID" class="form-select" id="roleId" required>
+            <option value="">-- Chọn vai trò --</option>
+            @if (ViewBag.Roles != null)
+            {
+                @foreach (var item in (SelectList)ViewBag.Roles)
+                {
+                    <option value="@item.Value" @(item.Value == Model?.RoleID.ToString() ? "selected" : "")>@item.Text</option>
+                }
+
+            }
+        </select>
+        <span asp-validation-for="RoleID" class="text-danger"></span>
+    </div>
+
+        <!-- Debug info cho roles -->
+        <small class="text-muted">
+            Current RoleID: @Model?.RoleID |
+            Roles count: @(ViewBag.Roles != null ? ((Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Roles).Count() : 0)
+        </small>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label">Họ và tên</label>
+        <input asp-for="FullName"
+               class="form-control"
+               placeholder="Nhập họ và tên"
+               value="@Model?.FullName" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email"
+               type="email"
+               class="form-control"
+               placeholder="Nhập email"
+               value="@Model?.Email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Phone" class="form-label">Số điện thoại</label>
+        <input asp-for="Phone"
+               class="form-control"
+               placeholder="Nhập số điện thoại"
+               value="@Model?.Phone" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a asp-area="ad"
+       asp-controller="Users"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Hủy
+    </a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Debug script để kiểm tra dữ liệu
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== EDIT VIEW DEBUG ===');
+            console.log('UserID:', '@Model?.UserID');
+            console.log('RoleID:', '@Model?.RoleID');
+            console.log('FullName:', '@Model?.FullName');
+            console.log('Email:', '@Model?.Email');
+            console.log('Phone:', '@Model?.Phone');
+
+            // Kiểm tra và set RoleID
+            const roleSelect = document.getElementById('roleSelect');
+            const currentRoleID = '@Model?.RoleID';
+
+            console.log('Role select element:', roleSelect);
+            console.log('Current RoleID to set:', currentRoleID);
+            console.log('Role options:');
+
+            // List tất cả options
+            for (let i = 0; i < roleSelect.options.length; i++) {
+                const option = roleSelect.options[i];
+                console.log(`  Option ${i}: value="${option.value}", text="${option.text}"`);
+            }
+
+            // Force set giá trị
+            if (roleSelect && currentRoleID && currentRoleID !== '') {
+                roleSelect.value = currentRoleID;
+                console.log('Set role value to:', currentRoleID);
+                console.log('Actual selected value:', roleSelect.value);
+
+                // Nếu vẫn không set được, thử cách khác
+                if (roleSelect.value !== currentRoleID) {
+                    console.log('Failed to set value, trying alternative method...');
+
+                    // Tìm option có value matching
+                    for (let i = 0; i < roleSelect.options.length; i++) {
+                        if (roleSelect.options[i].value === currentRoleID) {
+                            roleSelect.selectedIndex = i;
+                            console.log('Set selectedIndex to:', i);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Event listener để test thay đổi
+            roleSelect.addEventListener('change', function() {
+                console.log('Role changed to:', this.value);
+            });
+        });
+    </script>
+}

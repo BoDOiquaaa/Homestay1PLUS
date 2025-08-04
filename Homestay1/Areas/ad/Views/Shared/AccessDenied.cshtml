@@ -1,0 +1,46 @@
+﻿@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Truy cập bị từ chối";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-danger text-center">
+                <h2>🔒 Truy cập bị từ chối</h2>
+                <hr>
+                <p class="mb-4">
+                    <strong>Bạn không có quyền truy cập vào trang này.</strong><br />
+                    Chỉ có <span class="badge bg-primary">Owner</span> mới được phép thực hiện chức năng quản lý này.
+                </p>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="@Url.Action("Index", "Home", new { area = "" })"
+                       class="btn btn-primary">
+                        🏠 Về trang chủ
+                    </a>
+                    <a href="@Url.Action("Logout", "Account", new { area = "ad" })"
+                       class="btn btn-outline-secondary">
+                        🚪 Đăng xuất
+                    </a>
+                </div>
+            </div>
+
+            <!-- Thông tin debug -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Thông tin tài khoản hiện tại</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>UserID:</strong> @Context.Session.GetInt32("UserID")</p>
+                    <p><strong>RoleID:</strong> @Context.Session.GetInt32("RoleID")</p>
+                    <p><strong>Tên:</strong> @Context.Session.GetString("UserName")</p>
+                    <p><strong>Email:</strong> @Context.Session.GetString("UserEmail")</p>
+                    <small class="text-muted">
+                        * Bạn cần có RoleID = 2 (Owner) để truy cập chức năng quản lý
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
