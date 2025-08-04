@@ -14,9 +14,16 @@
 <div class="form-group mb-3">
     <label>Homestay</label>
     <select id="HomestayID" class="form-control">
-        @foreach (var item in (SelectList)ViewBag.Homestays)
+        @if (ViewBag.Homestays != null)
         {
-            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            @foreach (var item in (SelectList)ViewBag.Homestays)
+            {
+                        <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+            }
+        }
+        else
+        {
+                <option value="">-- Chưa có dữ liệu Homestay --</option>
         }
     </select>
 </div>
@@ -33,60 +40,212 @@
 
 <div class="form-group mb-3">
     <label>Trạng thái</label>
-    <input id="Status" class="form-control" value="@Model.Status" />
+    <select id="Status" class="form-control">
+        <option value="Còn phòng" @(Model.Status == "Còn phòng" ? "selected" : "")>Còn phòng</option>
+        <option value="Không còn phòng" @(Model.Status == "Không còn phòng" ? "selected" : "")>Không còn phòng</option>
+    </select>
 </div>
 
 <div class="form-group mb-3">
     <label>Ảnh hiện tại</label>
     @if (!string.IsNullOrEmpty(Model.ImageUrl))
     {
-        <div class="mb-2">
-            <img src="@Model.ImageUrl" alt="Current image" width="200" height="150" style="object-fit:cover;" />
-        </div>
+            <div class="mb-2">
+                <img src="@Model.ImageUrl" alt="Current image" width="200" height="150" style="object-fit:cover;" />
+            </div>
     }
     <label>Chọn ảnh mới (tùy chọn)</label>
     <input id="ImageFile" type="file" class="form-control" accept="image/*" />
+    <div id="imagePreview" class="mt-2"></div>
 </div>
 
-<button onclick="updateRoom()" class="btn btn-success">Cập nhật</button>
+<!-- Toast notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast text-bg-success" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto">Thông báo</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">Cập nhật thành công!</div>
+    </div>
+    <div id="errorToast" class="toast text-bg-danger" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto">Lỗi</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="errorMessage">Có lỗi xảy ra!</div>
+    </div>
+</div>
+
+<button id="updateBtn" onclick="updateRoom()" class="btn btn-success">
+    <span id="btnText">
+        <i class="fas fa-save"></i> Cập nhật
+    </span>
+    <span id="btnLoading" class="d-none">
+        <i class="fas fa-spinner fa-spin"></i> Đang cập nhật...
+    </span>
+</button>
+
 <a asp-area="Ad" asp-action="Index" class="btn btn-secondary">Hủy</a>
 
 @section Scripts {
-    <script>
-        function updateRoom() {
-            var formData = new FormData();
-            formData.append("RoomID", document.getElementById("RoomID").value);
-            formData.append("HomestayID", document.getElementById("HomestayID").value);
-            formData.append("RoomName", document.getElementById("RoomName").value);
-            formData.append("PricePerNight", document.getElementById("PricePerNight").value);
-            formData.append("Status", document.getElementById("Status").value);
+        <script>
+            function updateRoom() {
+                // Validation
+                if (!validateForm()) {
+                    return;
+                }
 
-            var imageFile = document.getElementById("ImageFile").files[0];
-            if (imageFile) {
-                formData.append("ImageFile", imageFile);
+                // Show loading
+                showLoading(true);
+
+                var formData = new FormData();
+                formData.append("RoomID", document.getElementById("RoomID").value);
+                formData.append("HomestayID", document.getElementById("HomestayID").value);
+                formData.append("RoomName", document.getElementById("RoomName").value);
+                formData.append("PricePerNight", document.getElementById("PricePerNight").value);
+                formData.append("Status", document.getElementById("Status").value); // Lấy giá trị từ dropdown
+
+                var imageFile = document.getElementById("ImageFile").files[0];
+                if (imageFile) {
+                    formData.append("ImageFile", imageFile);
+                }
+
+                const token = document.getElementById("RequestVerificationToken").value;
+
+                fetch('/Ad/Rooms/UpdateAjax', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    showLoading(false);
+
+                    if (result.success) {
+                        showSuccessToast();
+                        setTimeout(() => {
+                            window.location.href = "/Ad/Rooms/Index?message=edit-success";
+                        }, 1500);
+                    } else {
+                        showErrorToast(result.error || "Có lỗi xảy ra khi cập nhật");
+                    }
+                })
+                .catch(error => {
+                    showLoading(false);
+                    showErrorToast("Lỗi hệ thống: " + error.message);
+                });
             }
 
-            const token = document.getElementById("RequestVerificationToken").value;
+            function validateForm() {
+                const roomName = document.getElementById("RoomName").value.trim();
+                const pricePerNight = document.getElementById("PricePerNight").value;
+                const homestayID = document.getElementById("HomestayID").value;
+                const status = document.getElementById("Status").value;
 
-            fetch('/Ad/Rooms/UpdateAjax', {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': token
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert("Cập nhật thành công!");
-                    window.location.href = "/Ad/Rooms/Index?message=edit-success";
-                } else {
-                    alert("Lỗi: " + result.error);
+                if (!homestayID) {
+                    showErrorToast("Vui lòng chọn Homestay");
+                    return false;
                 }
-            })
-            .catch(error => {
-                alert("Lỗi hệ thống: " + error.message);
+
+                if (!roomName) {
+                    showErrorToast("Vui lòng nhập tên phòng");
+                    document.getElementById("RoomName").focus();
+                    return false;
+                }
+
+                if (!pricePerNight || parseFloat(pricePerNight) <= 0) {
+                    showErrorToast("Vui lòng nhập giá hợp lệ");
+                    document.getElementById("PricePerNight").focus();
+                    return false;
+                }
+
+                if (!status) {
+                    showErrorToast("Vui lòng chọn trạng thái phòng");
+                    return false;
+                }
+
+                return true;
+            }
+
+            function showLoading(isLoading) {
+                const btn = document.getElementById("updateBtn");
+                const btnText = document.getElementById("btnText");
+                const btnLoading = document.getElementById("btnLoading");
+
+                if (isLoading) {
+                    btn.disabled = true;
+                    btnText.classList.add("d-none");
+                    btnLoading.classList.remove("d-none");
+                } else {
+                    btn.disabled = false;
+                    btnText.classList.remove("d-none");
+                    btnLoading.classList.add("d-none");
+                }
+            }
+
+            function showSuccessToast() {
+                // Sử dụng alert nếu không có Bootstrap Toast
+                if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                    const toast = new bootstrap.Toast(document.getElementById('successToast'));
+                    toast.show();
+                } else {
+                    alert("Cập nhật thành công!");
+                }
+            }
+
+            function showErrorToast(message) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                    document.getElementById('errorMessage').textContent = message;
+                    const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+                    toast.show();
+                } else {
+                    alert("Lỗi: " + message);
+                }
+            }
+
+            // Image preview
+            document.getElementById('ImageFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const previewContainer = document.getElementById('imagePreview');
+
+                if (file) {
+                    // Kiểm tra kích thước file (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        showErrorToast("Kích thước file phải nhỏ hơn 5MB");
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewContainer.innerHTML = `
+                            <div class="position-relative d-inline-block">
+                                <img src="${e.target.result}" alt="Preview" 
+                                     class="img-thumbnail" style="max-width: 200px; max-height: 150px; object-fit: cover;">
+                                <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" 
+                                        onclick="removeImagePreview()" style="transform: translate(50%, -50%);">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.innerHTML = '';
+                }
             });
-        }
-    </script>
-}   
+
+            function removeImagePreview() {
+                document.getElementById('ImageFile').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+            }
+        </script>
+}

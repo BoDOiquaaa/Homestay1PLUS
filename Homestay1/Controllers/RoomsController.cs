@@ -28,8 +28,12 @@ namespace Homestay1.Areas.Ad.Controllers
         {
             ViewData["CurrentFilter"] = search;
             var rooms = await _roomRepo.GetAllAsync();
+
             if (!string.IsNullOrEmpty(search))
-                rooms = rooms.Where(r => r.RoomName.Contains(search));
+                rooms = rooms.Where(r => r.RoomName.Contains(search)).ToList();
+
+      
+
             return View(rooms);
         }
 
@@ -37,7 +41,7 @@ namespace Homestay1.Areas.Ad.Controllers
         public async Task<IActionResult> Create()
         {
             var homestays = await _homestayRepo.GetAllAsync();
-            ViewData["HomestayID"] = new SelectList(homestays, "HomestayID", "Name");
+            ViewData["Homestays"] = homestays;
 
             // Tạo token cho view
             ViewBag.RequestVerificationToken = HttpContext.RequestServices
@@ -88,12 +92,35 @@ namespace Homestay1.Areas.Ad.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var room = await _roomRepo.GetByIdAsync(id);
-            if (room == null) return NotFound();
+            try
+            {
+                var room = await _roomRepo.GetByIdAsync(id);
+                if (room == null)
+                    return NotFound();
 
-            var homestays = await _homestayRepo.GetAllAsync();
-            ViewBag.Homestays = new SelectList(homestays, "HomestayID", "Name", room.HomestayID);
-            return View(room);
+                // LỖI CHÍNH Ở ĐÂY - SỬA LẠI
+                var homestays = await _homestayRepo.GetAllAsync();
+
+                // Kiểm tra homestays có null không
+                if (homestays == null || !homestays.Any())
+                {
+                    // Nếu không có data, tạo list rỗng
+                    ViewBag.Homestays = new SelectList(new List<object>(), "HomestayID", "Name");
+                }
+                else
+                {
+                    // SỬA: Dùng ViewBag.Homestays thay vì ViewData["HomestayID"]
+                    ViewBag.Homestays = new SelectList(homestays, "HomestayID", "Name", room.HomestayID);
+                }
+
+                return View(room);
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nếu cần
+                ViewBag.Homestays = new SelectList(new List<object>(), "HomestayID", "Name");
+                return View(new Room()); // Trả về room rỗng để tránh lỗi
+            }
         }
 
         [HttpPost]

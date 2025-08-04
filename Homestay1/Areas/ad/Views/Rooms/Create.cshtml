@@ -1,70 +1,92 @@
 ﻿@model Homestay1.Models.Room
-@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     ViewData["Title"] = "Thêm phòng";
     Layout = "_AdminLayout";
-    var token = ViewBag.RequestVerificationToken;
 }
 <h2>@ViewData["Title"]</h2>
 
-<div class="form-group mb-3">
-    <label>Homestay</label>
-    <select id="HomestayID" class="form-control">
-        @foreach (var item in (SelectList)ViewData["HomestayID"])
-        {
-            <option value="@item.Value">@item.Text</option>
-        }
-    </select>
-</div>
-<div class="form-group mb-3">
-    <label>Tên phòng</label>
-    <input id="RoomName" class="form-control" />
-</div>
-<div class="form-group mb-3">
-    <label>Giá mỗi đêm</label>
-    <input id="PricePerNight" class="form-control" />
-</div>
-<div class="form-group mb-3">
-    <label>Trạng thái</label>
-    <input id="Status" class="form-control" />
-</div>
-<div class="form-group mb-3">
-    <label>Chọn ảnh</label>
-    <input id="ImageFile" type="file" class="form-control" accept="image/*" />
-</div>
+<form id="createForm">
+    @Html.AntiForgeryToken()
 
-<button onclick="createRoom()" class="btn btn-success">Lưu</button>
-<a asp-area="Ad" asp-action="Index" class="btn btn-secondary">Hủy</a>
+    <!-- Dropdown cho Homestay -->
+    <div class="mb-3">
+        <label class="form-label">Homestay</label>
+        <select name="HomestayID" class="form-control">
+            @foreach (var homestay in ViewData["Homestays"] as List<Homestay1.Models.Homestay>)
+            {
+                        <option value="@homestay.HomestayID">@homestay.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tên phòng</label>
+        <input type="text" name="RoomName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Giá mỗi đêm</label>
+        <input type="number" name="PricePerNight" class="form-control" />
+    </div>
+
+    <!-- Dropdown Trạng thái -->
+    <div class="mb-3">
+        <label class="form-label">Trạng thái phòng</label>
+        <select name="Status" class="form-control">
+            <option value="Available">Còn phòng</option>
+            <option value="Unavailable">Không còn phòng</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Chọn hình ảnh</label>
+        <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+    </div>
+
+    <button type="button" id="saveBtn" class="btn btn-primary">Lưu</button>
+    <a href="@Url.Action("Index", "Rooms", new { area = "ad" })" class="btn btn-secondary">Hủy</a>
+</form>
 
 @section Scripts {
-    <script>
-        function createRoom() {
-            var formData = new FormData();
-            formData.append("HomestayID", document.getElementById("HomestayID").value);
-            formData.append("RoomName", document.getElementById("RoomName").value);
-            formData.append("PricePerNight", document.getElementById("PricePerNight").value);
-            formData.append("Status", document.getElementById("Status").value);
+            <script>
+                document.getElementById('saveBtn').addEventListener('click', async () => {
+                    var form = document.getElementById('createForm');
+                    var token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+                    var data = new FormData(form);
 
-            var imageFile = document.getElementById("ImageFile").files[0];
-            if (imageFile) {
-                formData.append("ImageFile", imageFile);
-            }
+                    try {
+                        var res = await fetch('@Url.Action("Create", "Rooms", new { area = "ad" })', {
+                            method: 'POST',
+                            headers: { 
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'RequestVerificationToken': token 
+                            },
+                            body: data
+                        });
 
-            fetch('/Ad/Rooms/CreateAjaxWithImage', {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': '@token'
-                },
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert("Thêm thành công!");
-                    window.location.href = "/Ad/Rooms/Index?message=success";
-                } else {
-                    return response.text().then(txt => alert("Lỗi: " + txt));
-                }
-            });
-        }
-    </script>
+                        var text = await res.text();
+                        let payload;
+                        try { 
+                            payload = JSON.parse(text); 
+                        } catch {
+                            alert(`Lỗi từ máy chủ: ${res.status}\n${text}`);
+                            return;
+                        }
+
+                        if (payload.success === false && payload.errors) {
+                            alert("Lỗi xác thực:\n" + payload.errors.join("\n"));
+                            return;
+                        }
+
+                        if (payload.success) {
+                            window.location = payload.redirectUrl;
+                        } else {
+                            alert("Lỗi không xác định từ máy chủ:\n" + text);
+                        }
+                    } catch (ex) {
+                        console.error(ex);
+                        alert("Yêu cầu thất bại: " + ex.message);
+                    }
+                });
+            </script>
 }
