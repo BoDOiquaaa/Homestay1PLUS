@@ -41,10 +41,12 @@
 <div class="form-group mb-3">
     <label>Trạng thái</label>
     <select id="Status" class="form-control">
-        <option value="Còn phòng" @(Model.Status == "Còn phòng" ? "selected" : "")>Còn phòng</option>
-        <option value="Không còn phòng" @(Model.Status == "Không còn phòng" ? "selected" : "")>Không còn phòng</option>
+        <option value="available" @(Model.Status?.ToLower() == "available" ? "selected" : "")>Còn trống</option>
+        <option value="booked" @(Model.Status?.ToLower() == "booked" ? "selected" : "")>Đã đặt</option>
+        <option value="maintenance" @(Model.Status?.ToLower() == "maintenance" ? "selected" : "")>Bảo trì</option>
     </select>
 </div>
+
 
 <div class="form-group mb-3">
     <label>Ảnh hiện tại</label>

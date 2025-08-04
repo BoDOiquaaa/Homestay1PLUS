@@ -1,0 +1,196 @@
+﻿@model Homestay1.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "_UserLayout";
+}
+
+<style>
+    .auth-container {
+        max-width: 450px;
+        margin: 2rem auto;
+        padding: 0;
+    }
+
+    .auth-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 3rem 2.5rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-subtitle {
+        color: #7f8c8d;
+        font-size: 1rem;
+    }
+
+    .form-floating {
+        margin-bottom: 1.5rem;
+    }
+
+        .form-floating .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+            .form-floating .form-control:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                background: rgba(255, 255, 255, 1);
+            }
+
+        .form-floating label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+    .btn-login {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+        border-radius: 12px;
+        width: 100%;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+    .divider {
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+        color: #95a5a6;
+    }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e9ecef;
+        }
+
+        .divider span {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+    .register-link {
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+        .register-link a {
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+            .register-link a:hover {
+                color: #764ba2;
+                text-decoration: underline;
+            }
+
+    .alert-custom {
+        border-radius: 12px;
+        border: none;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.25rem;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="auth-title">Đăng nhập</h1>
+            <p class="auth-subtitle">Chào mừng bạn quay lại với Luxury Resort</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger alert-custom">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                @Html.ValidationSummary(false, "", new { @class = "mb-0" })
+            </div>
+        }
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-floating">
+                <input asp-for="Email" class="form-control" id="floatingEmail" placeholder="name@example.com" autocomplete="email">
+                <label for="floatingEmail">
+                    <i class="bi bi-envelope me-2"></i>Email
+                </label>
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="form-floating">
+                <input asp-for="Password" class="form-control" id="floatingPassword" placeholder="Password" autocomplete="current-password">
+                <label for="floatingPassword">
+                    <i class="bi bi-lock me-2"></i>Mật khẩu
+                </label>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Đăng nhập
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>Chưa có tài khoản?</span>
+        </div>
+
+        <div class="register-link">
+            <a asp-action="Register">
+                <i class="bi bi-person-plus me-2"></i>
+                Tạo tài khoản mới
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.Partial("_ValidationScriptsPartial")
+}
