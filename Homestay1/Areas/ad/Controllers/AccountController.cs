@@ -1,17 +1,21 @@
-﻿using Homestay1.Repositories;
+﻿using Homestay1.Data;
+using Homestay1.Models.Entities;
+using Homestay1.Repositories;
 using Homestay1.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace Homestay1.Areas.ad.Controllers
+namespace Homestay1.Controllers
 {
-    [Area("ad")]
     public class AccountController : Controller
     {
         private readonly IAccountRepository _accountRepo;
+        private readonly ApplicationDbContext _db;
 
-        public AccountController(IAccountRepository accountRepo)
+        public AccountController(IAccountRepository accountRepo, ApplicationDbContext db)
         {
             _accountRepo = accountRepo;
+            _db = db;
         }
 
         [HttpGet]
@@ -19,114 +23,124 @@ namespace Homestay1.Areas.ad.Controllers
         {
             // Kiểm tra nếu đã đăng nhập
             var userID = HttpContext.Session.GetInt32("UserID");
-            var roleID = HttpContext.Session.GetInt32("RoleID");
-
-            if (userID.HasValue && roleID.HasValue)
+            if (userID.HasValue)
             {
-                // Nếu đã đăng nhập và là Owner -> redirect đến Users
-                if (roleID.Value == 2)
-                {
-                    return RedirectToAction("Index", "Users", new { area = "ad" });
-                }
-                // Nếu đã đăng nhập nhưng không phải Owner -> về trang chủ
-                else
-                {
-                    return RedirectToAction("Index", "Home", new { area = "" });
-                }
+                return RedirectToAction("Index", "Home");
             }
 
-            // Chưa đăng nhập -> trả về view chứa form AJAX
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<JsonResult> LoginAjax([FromBody] LoginViewModel vm)
+        public async Task<IActionResult> Login(LoginViewModel vm)
         {
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                                              .Select(e => e.ErrorMessage)
-                                              .ToList();
-                return Json(new { success = false, errors });
+                return View(vm);
             }
 
             var user = await _accountRepo.AuthenticateAsync(vm.Email, vm.Password);
             if (user == null)
             {
-                return Json(new { success = false, errors = new[] { "Email hoặc mật khẩu không đúng." } });
+                ModelState.AddModelError("", "Email hoặc mật khẩu không đúng.");
+                return View(vm);
             }
 
-            // Lưu session với thông tin đầy đủ
+            // Lưu session
             HttpContext.Session.SetInt32("UserID", user.UserID);
             HttpContext.Session.SetInt32("RoleID", user.RoleID);
             HttpContext.Session.SetString("UserName", user.FullName ?? "");
             HttpContext.Session.SetString("UserEmail", user.Email ?? "");
 
-            // Debug log
-            System.Diagnostics.Debug.WriteLine($"=== USER LOGIN SUCCESS ===");
-            System.Diagnostics.Debug.WriteLine($"UserID: {user.UserID}");
-            System.Diagnostics.Debug.WriteLine($"RoleID: {user.RoleID}");
-            System.Diagnostics.Debug.WriteLine($"FullName: {user.FullName}");
-            System.Diagnostics.Debug.WriteLine($"Email: {user.Email}");
+            TempData["Success"] = $"Chào mừng {user.FullName}!";
+            return RedirectToAction("Index", "Home");
+        }
 
-            // Kiểm tra quyền và redirect phù hợp
-            if (user.RoleID == 2) // Owner
+        [HttpGet]
+        public IActionResult Register()
+        {
+            // Kiểm tra nếu đã đăng nhập
+            var userID = HttpContext.Session.GetInt32("UserID");
+            if (userID.HasValue)
             {
-                return Json(new
-                {
-                    success = true,
-                    redirectUrl = Url.Action("Index", "Users", new { area = "ad" }),
-                    message = $"Chào mừng Owner {user.FullName}!"
-                });
+                return RedirectToAction("Index", "Home");
             }
-            else if (user.RoleID == 1) // Admin - cũng cho phép truy cập
+
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel vm)
+        {
+            try
             {
-                return Json(new
+                if (!ModelState.IsValid)
                 {
-                    success = true,
-                    redirectUrl = Url.Action("Index", "Users", new { area = "ad" }),
-                    message = $"Chào mừng Admin {user.FullName}!"
-                });
+                    return View(vm);
+                }
+
+                // Kiểm tra email đã tồn tại
+                if (await _db.Users.AnyAsync(u => u.Email == vm.Email))
+                {
+                    ModelState.AddModelError("Email", "Email này đã được sử dụng.");
+                    return View(vm);
+                }
+
+                // Tạo user mới với RoleID = 4 (Customer)
+                var user = new User
+                {
+                    RoleID = 4, // Customer role
+                    FullName = vm.FullName?.Trim(),
+                    Email = vm.Email?.Trim().ToLower(),
+                    Password = vm.Password, // Trong thực tế nên hash password
+                    Phone = vm.Phone?.Trim(),
+                    CreatedAt = DateTime.Now
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+
+                // Tự động đăng nhập sau khi đăng ký
+                HttpContext.Session.SetInt32("UserID", user.UserID);
+                HttpContext.Session.SetInt32("RoleID", user.RoleID);
+                HttpContext.Session.SetString("UserName", user.FullName ?? "");
+                HttpContext.Session.SetString("UserEmail", user.Email ?? "");
+
+                TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Luxury Resort!";
+                return RedirectToAction("Index", "Home");
             }
-            else
+            catch (Exception ex)
             {
-                // Staff hoặc Customer -> về trang chủ
-                return Json(new
-                {
-                    success = true,
-                    redirectUrl = Url.Action("Index", "Home", new { area = "" }),
-                    message = $"Chào {user.FullName}! Bạn không có quyền quản lý."
-                });
+                System.Diagnostics.Debug.WriteLine($"❌ Register Error: {ex.Message}");
+                ModelState.AddModelError("", "Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.");
+                return View(vm);
             }
         }
 
         public IActionResult Logout()
         {
-            // Clear toàn bộ session
             HttpContext.Session.Clear();
-
-            // Debug log
-            System.Diagnostics.Debug.WriteLine("=== USER LOGOUT ===");
-            System.Diagnostics.Debug.WriteLine("Session cleared");
-
             TempData["Info"] = "Bạn đã đăng xuất thành công!";
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
-        // Action để kiểm tra thông tin session hiện tại (for debugging)
-        public IActionResult SessionInfo()
+        // Helper method để validate email
+        private bool IsValidEmail(string email)
         {
-            var sessionData = new
-            {
-                UserID = HttpContext.Session.GetInt32("UserID"),
-                RoleID = HttpContext.Session.GetInt32("RoleID"),
-                UserName = HttpContext.Session.GetString("UserName"),
-                UserEmail = HttpContext.Session.GetString("UserEmail"),
-                SessionId = HttpContext.Session.Id
-            };
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
 
-            return Json(sessionData);
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

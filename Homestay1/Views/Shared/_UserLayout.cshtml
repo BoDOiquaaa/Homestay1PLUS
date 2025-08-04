@@ -572,21 +572,58 @@
     </style>
 </head>
 <body>
+
     <div class="top-header">
         <div class="container">
             <div class="contact-info">
-                <a href="tel:+84123456789">
-                    <i class="bi bi-telephone"></i>
-                    +84 123 456 789
-                </a>
-                <a href="mailto:info@luxuryhotel.com">
-                    <i class="bi bi-envelope"></i>
-                    info@luxuryhotel.com
-                </a>
+                <a href="tel:0123456789"><i class="bi bi-telephone"></i> 0123 456 789</a>
+                <a href="mailto:info@example.com"><i class="bi bi-envelope"></i> info@example.com</a>
+            </div>
+
+            <div class="user-actions">
+                @{
+                    var userName = Context.Session.GetString("UserName");
+                    var userID = Context.Session.GetInt32("UserID");
+                }
+
+                @if (userID.HasValue)
+                {
+                    <!-- User đã đăng nhập -->
+                    <div class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" style="text-decoration: none;">
+                            <i class="bi bi-person-circle"></i>
+                            @userName
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Thông tin cá nhân</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-clock-history me-2"></i>Lịch sử booking</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</a></li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <!-- User chưa đăng nhập -->
+                    <a asp-controller="Account" asp-action="Login">
+                        <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                    </a>
+                    <a asp-controller="Account" asp-action="Register">
+                        <i class="bi bi-person-plus"></i> Đăng ký
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="top-header">
+        <div class="container">
+            <div class="contact-info">
+
             </div>
             <div class="user-actions">
                 <a href="#">
-<i class="bi bi-globe"></i>
+                    <i class="bi bi-globe"></i>
                     🇻🇳 Tiếng Việt
             </div>
         </div>
